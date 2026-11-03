@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Recs</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Recs">
+<meta name="theme-color" content="#f3f4f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101216" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Login / first-time setup -->
+<section id="auth" hidden>
+  <div class="brand"><img src="icon-192.png" alt=""><h1>Recs</h1></div>
+  <p class="lead">Jot down what friends suggest, and who suggested it.</p>
+  <form id="auth-form">
+    <input id="auth-user" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Username" required>
+    <input id="auth-pass" type="password" autocomplete="current-password" placeholder="Password" required>
+    <input id="auth-code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Setup code (first time only)" hidden>
+    <button type="submit" id="auth-go">Log in</button>
+    <button type="button" id="auth-toggle" class="link">New here? Set up an account</button>
+    <p id="auth-err" class="err" role="alert"></p>
+  </form>
+</section>
+
+<main id="app" hidden>
+  <!-- Add: one big button opens the step-by-step composer (type, name or place, who) -->
+  <div id="add-bar"><button id="add-open" type="button"><span class="plus" aria-hidden="true">＋</span>Add a suggestion</button></div>
+
+  <nav id="tabs" role="tablist">
+    <button role="tab" data-tab="todo" aria-selected="true">To try</button>
+    <button role="tab" data-tab="people">People</button>
+    <button role="tab" data-tab="tell">To tell <span id="tell-n" class="badge" hidden></span></button>
+    <button role="tab" data-tab="tried">Tried</button>
+    <button role="tab" data-tab="map">Map</button>
+  </nav>
+  <div id="filters"></div>
+  <!-- Map tab: every item with a pin; the list below it holds places that have no pin yet -->
+  <div id="big-map" class="big-map far" hidden></div>
+  <ul id="list"></ul>
+  <p id="sync" class="muted"></p>
+</main>
+
+<!-- Add composer: full screen, three steps -->
+<dialog id="composer" aria-labelledby="c-title">
+  <header class="c-head">
+    <button type="button" id="c-back" class="c-icon" aria-label="Back">‹</button>
+    <h2 id="c-title">New suggestion</h2>
+    <button type="button" id="c-close" class="c-icon" aria-label="Close">✕</button>
+  </header>
+  <ol id="c-steps" class="c-steps" aria-label="Steps"></ol>
+  <div id="c-body" class="c-body"></div>
+  <footer id="c-foot" class="c-foot"></footer>
+</dialog>
+
+<!-- Item / person detail sheet -->
+<dialog id="sheet"><div id="sheet-body"></div></dialog>
+<div id="toast" role="status" hidden></div>
+
+<script src="parse.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

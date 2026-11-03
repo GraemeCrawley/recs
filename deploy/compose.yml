@@ -1,0 +1,35 @@
+# deploy/compose.yml — app-owned Compose fragment for recs.
+# Infra references this via `include:` in infrastructure/docker-compose.yml.
+# Routing is NOT here (Traefik FILE provider): see deploy/dynamic-recs.yml.
+# Data: SQLite on the named volume recs_data. Private: own login, signup needs RECS_SETUP_CODE.
+
+services:
+  recs:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: recs
+    restart: unless-stopped
+    environment:
+      TZ: America/Toronto
+      DB_PATH: /data/recs.db
+      COOKIE_SECURE: "1"
+      COOKIE_PATH: /recs
+      RECS_SETUP_CODE: ${RECS_SETUP_CODE}
+    volumes:
+      - recs_data:/data
+    networks:
+      - web
+    labels:
+      - "portal.tile=true"
+      - "portal.title=Recs"
+      - "portal.description=Suggestions people give you, and who gave them."
+      - "portal.section=apps"
+      - "portal.url=https://apps.graemecrawley.com/recs/"
+
+volumes:
+  recs_data:
+
+networks:
+  web:
+    driver: bridge

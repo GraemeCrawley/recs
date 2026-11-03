@@ -1,0 +1,36 @@
+# Traefik dynamic config for recs (FILE provider — labels do not route).
+# apps.graemecrawley.com/recs/* -> http://recs:8000/* (after strip).
+# Infra bind-mounts this file into traefik:
+#   - ../recs/deploy/dynamic-recs.yml:/etc/traefik/dynamic-recs.yml:ro
+# (not a symlink — it would dangle inside the container), then recreates traefik.
+
+http:
+  routers:
+    recs:
+      rule: "Host(`apps.graemecrawley.com`) && PathPrefix(`/recs`)"
+      entryPoints:
+        - web
+      service: recs
+      middlewares:
+        - recs-slash
+        - recs-strip
+        - security-headers
+      priority: 220   # higher than apps-portal (200)
+
+  services:
+    recs:
+      loadBalancer:
+        servers:
+          - url: "http://recs:8000"
+
+  middlewares:
+    # Bare /recs -> /recs/ so relative asset/API URLs resolve.
+    recs-slash:
+      redirectRegex:
+        regex: "^(https?://[^/]+/recs)$"
+        replacement: "${1}/"
+        permanent: true
+    recs-strip:
+      stripPrefix:
+        prefixes:
+          - "/recs"
