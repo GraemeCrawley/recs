@@ -208,3 +208,9 @@ dialog::backdrop { background: rgb(10 12 16 / .45); }
 .key-pin.todo { background: var(--accent); }
 .key-pin.tried { background: #fff; color: #1f7a4d; box-shadow: 0 0 0 1.5px #5d6270; }
 #list > .map-nopin { margin-top: 18px; }
+
+/* demo mode banner */
+#demo-bar { margin: 12px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--accent-soft); color: var(--ink); }
+#demo-bar p { margin: 0 0 10px; font-size: 15px; }
+#demo-bar div { display: flex; gap: 8px; flex-wrap: wrap; }
+#demo-bar .btn { min-height: 40px; }

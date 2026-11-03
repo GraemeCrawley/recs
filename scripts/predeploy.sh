@@ -3,7 +3,7 @@
 # and hit /health. Catches files missing from the image (bit city-explorer 2026-10-06).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-node --test tests/parse.test.js 2>&1 | grep -E "^ℹ (pass|fail)"
+node --test tests/parse.test.js tests/demo.test.js 2>&1 | grep -E "^ℹ (pass|fail)"
 .venv/bin/python -m unittest discover -s tests 2>&1 | tail -1
 docker build -q -t recs:predeploy . >/dev/null
 docker rm -f recs-predeploy >/dev/null 2>&1 || true

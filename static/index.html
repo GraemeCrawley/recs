@@ -28,11 +28,18 @@
     <input id="auth-code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Setup code (first time only)" hidden>
     <button type="submit" id="auth-go">Log in</button>
     <button type="button" id="auth-toggle" class="link">New here? Set up an account</button>
+    <button type="button" id="auth-demo" class="link">See how it works</button>
     <p id="auth-err" class="err" role="alert"></p>
   </form>
 </section>
 
 <main id="app" hidden>
+  <!-- Demo mode only: sample data that lives in this browser -->
+  <div id="demo-bar" role="note" hidden>
+    <p><b>Demo, nothing is saved.</b> Made-up suggestions and people. Try anything.</p>
+    <div><button type="button" id="demo-signup" class="btn primary">Create an account</button>
+    <button type="button" id="demo-reset" class="btn">Reset demo</button></div>
+  </div>
   <!-- Add: one big button opens the step-by-step composer (type, name or place, who) -->
   <div id="add-bar"><button id="add-open" type="button"><span class="plus" aria-hidden="true">＋</span>Add a suggestion</button></div>
 
@@ -67,6 +74,7 @@
 <div id="toast" role="status" hidden></div>
 
 <script src="parse.js"></script>
+<script src="demo.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -9,6 +9,8 @@ Later you mark one "tried" and the app helps you tell that person.
 - Restaurants/places can be searched on a map (via [Photon](https://photon.komoot.io/),
   OpenStreetMap data); only the place text is sent, never people's names.
 - Own login. Signing up needs a setup code, so a public instance stays private.
+- "See how it works" on the login screen opens a demo with made-up data. It runs entirely
+  in the browser (`static/demo.js`), so the demo never sends anything to the server.
 
 ## Screenshots
 
@@ -53,7 +55,7 @@ under a sub-path (`/recs`) behind a reverse proxy.
 ## Tests
 
 ```bash
-node --test tests/parse.test.js
+node --test tests/parse.test.js tests/demo.test.js
 .venv/bin/python -m unittest discover -s tests
 ```
 

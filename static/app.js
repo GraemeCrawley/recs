@@ -10,9 +10,17 @@ const LABEL = { book: "Book", movie: "Movie", show: "Show", restaurant: "Restaur
 const TYPES = Object.keys(ICON);
 const PINNABLE = new Set(["place", "restaurant"]);
 
+// Demo mode (#demo): every api call is answered by demo.js inside the browser, never the server.
+// Its cache and outbox use separate storage keys, so demo data never mixes with a real account.
+const DEMO = location.hash === "#demo";
+const PFX = DEMO ? "recs.demo." : "recs.";
+let demo = null;
+try { if (DEMO) demo = RecsDemo.createDemo(localStorage); } catch {}
+if (DEMO && !demo) demo = RecsDemo.createDemo({ getItem: () => null, setItem() {} });  // storage blocked: memory only
+
 const store = {
-  get(k, d) { try { return JSON.parse(localStorage.getItem("recs." + k)) ?? d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem("recs." + k, JSON.stringify(v)); } catch {} },
+  get(k, d) { try { return JSON.parse(localStorage.getItem(PFX + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(PFX + k, JSON.stringify(v)); } catch {} },
 };
 
 let S = store.get("state", null);          // {people, items} from the server
@@ -22,6 +30,7 @@ let tab = "todo", typeFilter = null, mapFilter = null;
 // ---------- api ----------
 
 async function api(method, path, body) {
+  if (DEMO) { await null; return demo.handle(method, path, body); }
   const r = await fetch(path, { method, headers: body ? { "content-type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined, credentials: "same-origin" });
   if (r.status === 401 && !path.startsWith("api/login") && !path.startsWith("api/register")) { showAuth(); throw new Error("auth"); }
@@ -59,6 +68,7 @@ let registering = false;
 function showAuth() {
   $("#app").hidden = true; $("#auth").hidden = false;
   try { localStorage.removeItem("recs.state"); } catch {}
+  if (location.hash === "#signup") { history.replaceState(null, "", location.pathname); if (!registering) $("#auth-toggle").click(); }
   $("#auth-user").focus();
 }
 $("#auth-toggle").onclick = () => {
@@ -67,6 +77,13 @@ $("#auth-toggle").onclick = () => {
   $("#auth-go").textContent = registering ? "Create account" : "Log in";
   $("#auth-toggle").textContent = registering ? "Have an account? Log in" : "New here? Set up an account";
   $("#auth-pass").autocomplete = registering ? "new-password" : "current-password";
+};
+$("#auth-demo").onclick = () => { location.hash = "demo"; location.reload(); };
+$("#demo-signup").onclick = () => { location.replace(location.pathname + "#signup"); location.reload(); };
+$("#demo-reset").onclick = () => {
+  if (!confirm("Start the demo over with the sample data?")) return;
+  outbox = []; store.set("outbox", outbox);
+  setState(demo.reset()); toast("Demo reset");
 };
 $("#auth-form").onsubmit = async (e) => {
   e.preventDefault();
@@ -623,6 +640,7 @@ function toast(msg, action, fn) {
 
 function start() {
   $("#app").hidden = false;
+  $("#demo-bar").hidden = !DEMO;
   render();
 }
 window.addEventListener("online", flush);
