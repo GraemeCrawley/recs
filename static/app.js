@@ -18,6 +18,18 @@ let demo = null;
 try { if (DEMO) demo = RecsDemo.createDemo(localStorage); } catch {}
 if (DEMO && !demo) demo = RecsDemo.createDemo({ getItem: () => null, setItem() {} });  // storage blocked: memory only
 
+// Phones: never move focus into a text box on our own, it pops the keyboard up.
+// Fields get focus when tapped, plus one deliberate case: the name box right after a type tile tap.
+const TYPING = "input:not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable]";
+const finePointer = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
+// showModal() focuses the first field inside a dialog (the item title, a person's name...).
+// The dialogs carry autofocus so the dialog itself takes focus; the blur is a fallback for older browsers.
+function openDialog(d) {
+  if (!d.open) d.showModal();
+  const a = document.activeElement;
+  if (a && d.contains(a) && a.matches(TYPING)) { a.blur(); d.focus(); }
+}
+
 const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(PFX + k)) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(PFX + k, JSON.stringify(v)); } catch {} },
@@ -69,7 +81,7 @@ function showAuth() {
   $("#app").hidden = true; $("#auth").hidden = false;
   try { localStorage.removeItem("recs.state"); } catch {}
   if (location.hash === "#signup") { history.replaceState(null, "", location.pathname); if (!registering) $("#auth-toggle").click(); }
-  $("#auth-user").focus();
+  if (finePointer()) $("#auth-user").focus();  // desktop only
 }
 $("#auth-toggle").onclick = () => {
   registering = !registering;
@@ -112,7 +124,7 @@ const STEP_NAMES = ["Type", "Name", "Who"];
 function openComposer() {
   C = { step: 0, type: null, text: "", title: "", pin: null, person: undefined, candidates: [], results: null, query: "" };
   renderComposer();
-  if (!comp.open) comp.showModal();
+  openDialog(comp);
 }
 $("#add-open").onclick = openComposer;
 $("#c-close").onclick = () => comp.close();
@@ -143,7 +155,7 @@ function stepType() {
   cBody.innerHTML = `<h3 class="c-q">What kind of thing?</h3>
     <div class="tiles">${TYPES.map((t) => `<button type="button" class="tile ${C.type === t ? "on" : ""}" data-type="${t}"><span aria-hidden="true">${ICON[t]}</span>${LABEL[t]}</button>`).join("")}</div>`;
   cFoot.innerHTML = "";
-  cBody.onclick = (e) => { const b = e.target.closest("[data-type]"); if (!b) return; C.type = b.dataset.type; if (!isPlace()) C.pin = null; goStep(1); };
+  cBody.onclick = (e) => { const b = e.target.closest("[data-type]"); if (!b) return; C.type = b.dataset.type; if (!isPlace()) C.pin = null; C.focusName = true; goStep(1); };
 }
 
 let searchT = null, searchN = 0;
@@ -155,8 +167,10 @@ function stepName() {
     <p id="c-hint" class="c-hint"></p>
     ${place ? `<div id="c-map" class="c-map" hidden aria-hidden="true"></div><ul id="c-results" class="c-results" aria-live="polite"></ul>` : ""}`;
   const inp = $("#c-name");
-  inp.focus(); // a tap brought us here, so iOS opens the keyboard
-  inp.setSelectionRange(inp.value.length, inp.value.length);
+  if (C.focusName) {  // only straight after a type tile tap: that tap lets iOS open the keyboard
+    C.focusName = false;
+    inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+  }
   inp.oninput = () => { C.text = inp.value; C.pin = null; nameChanged(); };
   inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); if (C.title) { C.pin = place ? C.pin : null; goStep(2); } } };
   cBody.onclick = (e) => {
@@ -396,7 +410,7 @@ $("#list").onclick = (e) => {
 // ---------- sheets ----------
 
 const sheet = $("#sheet"), body = $("#sheet-body");
-function openSheet(html) { body.innerHTML = html; if (!sheet.open) sheet.showModal(); }
+function openSheet(html) { body.innerHTML = html; openDialog(sheet); }
 sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); });
 sheet.addEventListener("close", () => { mapState = null; });
 

@@ -214,3 +214,4 @@ dialog::backdrop { background: rgb(10 12 16 / .45); }
 #demo-bar p { margin: 0 0 10px; font-size: 15px; }
 #demo-bar div { display: flex; gap: 8px; flex-wrap: wrap; }
 #demo-bar .btn { min-height: 40px; }
+dialog:focus { outline: none; }

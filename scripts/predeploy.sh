@@ -3,7 +3,10 @@
 # and hit /health. Catches files missing from the image (bit city-explorer 2026-10-06).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-node --test tests/parse.test.js tests/demo.test.js 2>&1 | grep -E "^ℹ (pass|fail)"
+# browser focus test needs playwright-core; use any local copy if it isn't installed here
+: "${PLAYWRIGHT_CORE:=$(ls -d node_modules/playwright-core ~/.npm/_npx/*/node_modules/playwright-core 2>/dev/null | head -1)}"
+export PLAYWRIGHT_CORE
+node --test tests/*.test.js 2>&1 | grep -E "^ℹ (pass|fail|skipped)"
 .venv/bin/python -m unittest discover -s tests 2>&1 | tail -1
 docker build -q -t recs:predeploy . >/dev/null
 docker rm -f recs-predeploy >/dev/null 2>&1 || true

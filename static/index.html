@@ -58,7 +58,7 @@
 </main>
 
 <!-- Add composer: full screen, three steps -->
-<dialog id="composer" aria-labelledby="c-title">
+<dialog id="composer" aria-labelledby="c-title" tabindex="-1" autofocus>
   <header class="c-head">
     <button type="button" id="c-back" class="c-icon" aria-label="Back">‹</button>
     <h2 id="c-title">New suggestion</h2>
@@ -70,7 +70,7 @@
 </dialog>
 
 <!-- Item / person detail sheet -->
-<dialog id="sheet"><div id="sheet-body"></div></dialog>
+<dialog id="sheet" tabindex="-1" autofocus><div id="sheet-body"></div></dialog>
 <div id="toast" role="status" hidden></div>
 
 <script src="parse.js"></script>

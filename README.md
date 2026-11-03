@@ -55,7 +55,7 @@ under a sub-path (`/recs`) behind a reverse proxy.
 ## Tests
 
 ```bash
-node --test tests/parse.test.js tests/demo.test.js
+node --test tests/*.test.js   # the browser test needs playwright-core (PLAYWRIGHT_CORE=path)
 .venv/bin/python -m unittest discover -s tests
 ```
 
