@@ -10,6 +10,14 @@ Later you mark one "tried" and the app helps you tell that person.
   OpenStreetMap data); only the place text is sent, never people's names.
 - Own login. Signing up needs a setup code, so a public instance stays private.
 
+## Screenshots
+
+All data below is made up.
+
+| Your list | Add: pick a type | Add: name it | Add: who suggested it | Mark it tried |
+|---|---|---|---|---|
+| <img src="docs/screenshots/list.png" width="180"> | <img src="docs/screenshots/add-1-type.png" width="180"> | <img src="docs/screenshots/add-2-name.png" width="180"> | <img src="docs/screenshots/add-3-who.png" width="180"> | <img src="docs/screenshots/tried.png" width="180"> |
+
 ## Run locally
 
 With uvicorn:
