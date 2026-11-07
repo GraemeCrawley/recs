@@ -1,7 +1,7 @@
 /* recs: word of mouth. Ballpoint blue on cool paper; the people who suggested things carry the colour
    (each person gets a stable avatar hue, see avatar() in app.js). */
 :root {
-  --bg: #f3f4f7; --card: #ffffff; --ink: #15171c; --muted: #5d6270; --line: #dde0e7; --field: #ffffff;
+  --bg: #f3f4f7; --card: #ffffff; --ink: #15171c; --muted: #5d6270; --line: #dde0e7; --switch-off: #7d8390; --field: #ffffff;
   --accent: #2f4bdb; --accent-ink: #ffffff; --accent-soft: #e6eafc; --chip: #e9ebf1; --ok: #1f7a4d; --warn: #b42318;
   --av-l: .87; --av-c: .085; --av-ink: #15171c; --tile: #eceef3;
   --shadow: 0 1px 2px rgb(21 23 28 / .06), 0 6px 18px rgb(21 23 28 / .06);
@@ -9,7 +9,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #101216; --card: #191c22; --ink: #eef0f4; --muted: #9aa1ae; --line: #2c3039; --field: #14161b;
+    --bg: #101216; --card: #191c22; --ink: #eef0f4; --muted: #9aa1ae; --line: #2c3039; --switch-off: #646a77; --field: #14161b;
     --accent: #8fa3ff; --accent-ink: #101216; --accent-soft: #232a4a; --chip: #232731; --ok: #6fd39b; --warn: #ff8a7a;
     --av-l: .45; --av-c: .1; --av-ink: #ffffff; --tile: #22262e;
     --shadow: 0 1px 2px rgb(0 0 0 / .5);
@@ -224,7 +224,7 @@ dialog:focus { outline: none; }
   appearance: none; -webkit-appearance: none; font-size: 15px; text-overflow: ellipsis; color: var(--ink); }
 #filters .switch { flex: none; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--muted); padding-left: 2px; cursor: pointer; }
 .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.switch .track { position: relative; width: 44px; height: 26px; border-radius: 999px; background: var(--line); transition: background .15s; }
+.switch .track { position: relative; width: 44px; height: 26px; border-radius: 999px; background: var(--switch-off); transition: background .15s; }
 .switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s; }
 .switch input:checked + .track { background: var(--ok); }
