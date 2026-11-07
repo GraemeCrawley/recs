@@ -435,6 +435,37 @@ const sheet = $("#sheet"), body = $("#sheet-body");
 function openSheet(html) { body.innerHTML = html; openDialog(sheet); }
 sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); });
 sheet.addEventListener("close", () => { mapState = null; });
+swipeToClose(sheet);
+
+// Pull a bottom sheet down to close it, like iOS sheets. Only when it's scrolled to the top, and not
+// when the drag starts on the map (that pans the map) or in a text box.
+function swipeToClose(d) {
+  let y0 = null, dy = 0, t0 = 0;
+  const reset = () => { d.style.transition = "transform .2s ease"; d.style.transform = ""; y0 = null; dy = 0; };
+  d.addEventListener("touchstart", (e) => {
+    y0 = null;
+    if (e.touches.length !== 1 || d.scrollTop > 0 || e.target.closest(".leaflet-container, input, textarea, select")) return;
+    y0 = e.touches[0].clientY; dy = 0; t0 = Date.now(); d.style.transition = "none";
+  }, { passive: true });
+  d.addEventListener("touchmove", (e) => {
+    if (y0 === null) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy <= 0) { d.style.transform = ""; if (dy < -6) y0 = null; return; }  // dragging up: let it scroll
+    e.preventDefault();
+    d.style.transform = `translateY(${dy}px)`;
+  }, { passive: false });
+  const end = () => {
+    if (y0 === null) return;
+    const fast = dy > 40 && dy / Math.max(1, Date.now() - t0) > 0.5;
+    if (dy > 110 || fast) {
+      d.style.transition = "transform .18s ease-in"; d.style.transform = "translateY(100%)";
+      setTimeout(() => { d.close(); d.style.transition = "none"; d.style.transform = ""; }, 180);
+      y0 = null; dy = 0;
+    } else reset();
+  };
+  d.addEventListener("touchend", end);
+  d.addEventListener("touchcancel", reset);
+}
 
 function openItem(id) {
   const it = S.items.find((i) => i.id === id);
