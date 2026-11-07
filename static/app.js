@@ -37,7 +37,11 @@ const store = {
 
 let S = store.get("state", null);          // {people, items} from the server
 let outbox = store.get("outbox", []);      // new items not yet acknowledged
-let tab = "todo", typeFilter = null, mapFilter = null;
+let tab = "todo", mapFilter = null;
+// To try list filters: who suggested it, what kind, and whether to include things already tried.
+let F = { person: "", type: "", done: false };
+try { F = { ...F, ...JSON.parse(sessionStorage.getItem(PFX + "filters")) }; } catch {}
+const saveF = () => { try { sessionStorage.setItem(PFX + "filters", JSON.stringify(F)); } catch {} };
 
 // ---------- api ----------
 
@@ -358,12 +362,25 @@ function render() {
   if (tab !== "map") $("#big-map").hidden = true;
 
   if (tab === "todo") {
-    const todo = items.filter((i) => !i.tried_at);
-    const present = TYPES.filter((t) => todo.some((i) => i.type === t));
-    if (present.length > 1) filters.innerHTML = [null, ...present].map((t) =>
-      `<button class="chip ${typeFilter === t ? "on" : ""}" data-filter="${t ?? ""}">${t ? ICON[t] + " " + LABEL[t] : "All"}</button>`).join("");
-    const shown = todo.filter((i) => !typeFilter || i.type === typeFilter);
-    list.innerHTML = shown.map((i) => row(i)).join("") || `<li class="empty"><b>Nothing to try yet</b><span class="muted">Tap “Add a suggestion” when someone tells you about something.</span></li>`;
+    const pool = items.filter((i) => F.done || !i.tried_at);
+    // options come from what's in the list, so no dead ends; keep a stale choice visible so it can be cleared
+    const pids = new Set(pool.map((i) => i.person_id).filter(Boolean));
+    if (F.person && F.person !== "none") pids.add(+F.person);
+    const ppl = [...pids].map(personById).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+    const types = TYPES.filter((t) => pool.some((i) => i.type === t) || t === F.type);
+    const opt = (v, label, cur) => `<option value="${v}" ${String(cur) === String(v) ? "selected" : ""}>${esc(label)}</option>`;
+    if (items.length) filters.innerHTML = `
+      <label class="pick"><span class="sr">Who suggested it</span><select id="f-person">${opt("", "Everyone", F.person)}
+        ${ppl.map((p) => opt(p.id, p.name, F.person)).join("")}${pool.some((i) => !i.person_id) || F.person === "none" ? opt("none", "Nobody (found it myself)", F.person) : ""}</select></label>
+      <label class="pick"><span class="sr">Type</span><select id="f-type">${opt("", "All types", F.type)}
+        ${types.map((t) => opt(t, `${ICON[t]} ${LABEL[t]}`, F.type)).join("")}</select></label>
+      <label class="switch"><input id="f-done" type="checkbox" role="switch" ${F.done ? "checked" : ""}><span class="track" aria-hidden="true"></span>Done</label>`;
+    const shown = pool.filter((i) => (!F.type || i.type === F.type)
+      && (!F.person || (F.person === "none" ? !i.person_id : i.person_id === +F.person)));
+    const filtered = F.person || F.type;
+    list.innerHTML = shown.map((i) => row(i, i.tried_at ? `<span class="done-tag">tried ✓</span>` : "")).join("")
+      || (filtered ? `<li class="empty"><b>Nothing matches</b><span class="muted">Try “Everyone” or “All types”.</span></li>`
+        : `<li class="empty"><b>Nothing to try yet</b><span class="muted">Tap “Add a suggestion” when someone tells you about something.</span></li>`);
   } else if (tab === "tried") {
     const tried = items.filter((i) => i.tried_at).sort((a, b) => b.tried_at - a.tried_at);
     list.innerHTML = tried.map((i) => row(i, i.told_at ? `<span class="done-tag">told ✓</span>` : "")).join("") || `<li class="empty"><b>Nothing tried yet</b><span class="muted">Open something you've tried and tap “I tried it”.</span></li>`;
@@ -394,10 +411,15 @@ function render() {
 
 $("#tabs").onclick = (e) => { const b = e.target.closest("[data-tab]"); if (b) { tab = b.dataset.tab; render(); } };
 $("#filters").onclick = (e) => {
-  const b = e.target.closest("[data-filter], [data-mapf]");
+  const b = e.target.closest("[data-mapf]");
   if (!b) return;
-  if ("mapf" in b.dataset) mapFilter = b.dataset.mapf || null; else typeFilter = b.dataset.filter || null;
+  mapFilter = b.dataset.mapf || null;
   render();
+};
+$("#filters").onchange = (e) => {
+  const t = e.target;
+  if (t.id === "f-person") F.person = t.value; else if (t.id === "f-type") F.type = t.value; else if (t.id === "f-done") F.done = t.checked; else return;
+  saveF(); render();
 };
 $("#list").onclick = (e) => {
   const b = e.target.closest("button");
