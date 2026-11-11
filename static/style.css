@@ -230,3 +230,8 @@ dialog:focus { outline: none; }
 .switch input:checked + .track { background: var(--ok); }
 .switch input:checked + .track::after { transform: translateX(18px); }
 .switch input:focus-visible + .track { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* item sheet: Share sits next to the title so it's always in view */
+.title-row { display: flex; gap: 8px; align-items: stretch; }
+.title-row .sheet-title { flex: 1; min-width: 0; }
+.title-row .share { flex: none; gap: 6px; padding-inline: 14px; }

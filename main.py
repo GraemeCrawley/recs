@@ -334,7 +334,7 @@ async def geocode(q: str, lat: float | None = None, lon: float | None = None, ui
 
 # ---------- static ----------
 
-ASSETS = ("parse.js", "demo.js", "app.js", "style.css")
+ASSETS = ("parse.js", "demo.js", "share.js", "app.js", "style.css")
 
 
 def _asset_hashes() -> dict[str, str]:

@@ -467,13 +467,23 @@ function swipeToClose(d) {
   d.addEventListener("touchcancel", reset);
 }
 
+// Pass a suggestion on to a friend via the phone's share menu (or copy it where there's none).
+async function shareItem(it) {
+  const { title, text } = RecsShare.shareText(it);
+  try {
+    if (navigator.share) await navigator.share({ title, text });
+    else { await navigator.clipboard.writeText(text); toast("Copied. Paste it to whoever you like."); }
+  } catch (e) { if (e.name !== "AbortError") toast("Couldn't share that"); }
+}
+
 function openItem(id) {
   const it = S.items.find((i) => i.id === id);
   if (!it) return;
   const who = personName(it);
   const pin = it.lat != null;
   openSheet(`
-    <input id="it-title" class="sheet-title" value="${esc(it.title)}" aria-label="Title">
+    <div class="title-row"><input id="it-title" class="sheet-title" value="${esc(it.title)}" aria-label="Title">
+      <button class="btn share" data-act="share" aria-label="Share with a friend"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Share</button></div>
     <div class="row types">${TYPES.map((t) => `<button class="chip ${t === it.type ? "on" : ""}" data-settype="${t}">${ICON[t]} ${LABEL[t]}</button>`).join("")}</div>
     <div class="from">${who ? avatar(who, "lg") : `<span class="av lg new">?</span>`}<span>From</span>
       <select id="it-person" class="btn"><option value="">Nobody</option>${[...people()].sort((a, b) => a.name.localeCompare(b.name))
@@ -512,6 +522,7 @@ function openItem(id) {
     if (b.dataset.settype) return patch({ type: b.dataset.settype });
     const notes = $("#it-notes")?.value;
     switch (b.dataset.act) {
+      case "share": return shareItem(it);
       case "try": return patch({ tried: true, notes });
       case "untry": return patch({ tried: false });
       case "told": return patch({ told: true });
