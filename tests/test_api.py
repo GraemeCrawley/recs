@@ -95,6 +95,36 @@ class ItemsTest(unittest.TestCase):
         it = s["items"][0]
         self.assertEqual((it["lat"], it["lon"], it["place_label"]), (43.65, -79.4, "Test Cafe, Toronto"))
 
+    def test_book_author_add_edit_clear(self):
+        c = client("items6")
+        it = c.post("/api/items", json={"client_id": "b", "title": "Dune", "type": "book", "creator": "  Frank   Herbert "}).json()["items"][0]
+        self.assertEqual(it["creator"], "Frank Herbert")
+        it = c.patch(f"/api/items/{it['id']}", json={"creator": "F. Herbert"}).json()["items"][0]
+        self.assertEqual(it["creator"], "F. Herbert")
+        it = c.patch(f"/api/items/{it['id']}", json={"notes": "x"}).json()["items"][0]
+        self.assertEqual(it["creator"], "F. Herbert")  # untouched when not sent
+        it = c.patch(f"/api/items/{it['id']}", json={"creator": ""}).json()["items"][0]
+        self.assertIsNone(it["creator"])
+
+    def test_old_database_gets_creator_column(self):
+        import sqlite3
+        old = tempfile.mktemp(suffix=".db")
+        with sqlite3.connect(old) as db:  # items table as it was before the author field
+            db.execute("CREATE TABLE items (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, client_id TEXT NOT NULL, "
+                       "title TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'other', person_id INTEGER, notes TEXT NOT NULL DEFAULT '', "
+                       "tried_at REAL, told_at REAL, lat REAL, lon REAL, place_label TEXT, created REAL NOT NULL, "
+                       "updated REAL NOT NULL, UNIQUE (user_id, client_id))")
+            db.execute("INSERT INTO items (user_id,client_id,title,created,updated) VALUES (1,'o','Old',0,0)")
+        saved, main.DB_PATH = main.DB_PATH, old
+        try:
+            main.init_db()
+            main.init_db()  # twice: must not try to add it again
+            with sqlite3.connect(old) as db:
+                self.assertEqual(db.execute("SELECT title, creator FROM items").fetchall(), [("Old", None)])
+        finally:
+            main.DB_PATH = saved
+            os.remove(old)
+
     def test_bad_type_rejected(self):
         c = client("items4")
         self.assertEqual(c.post("/api/items", json={"client_id": "t", "title": "x", "type": "spaceship"}).status_code, 400)

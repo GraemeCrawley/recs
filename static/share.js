@@ -16,7 +16,7 @@
       const q = label ? `${it.title}, ${addr}` : `${it.lat},${it.lon}`;
       lines.push("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q));
     } else {
-      lines.push(`${icon} ${it.title}${KIND[it.type] ? ` (${KIND[it.type]})` : ""}`);
+      lines.push(`${icon} ${it.title}${it.creator ? ` by ${it.creator}` : ""}${KIND[it.type] ? ` (${KIND[it.type]})` : ""}`);
     }
     return { title: it.title, text: "You should try this:\n" + lines.join("\n") };
   }

@@ -25,6 +25,7 @@ test("every .focus() on a field is guarded (desktop only, or straight after a ty
   const allowed = [
     /^if \(finePointer\(\)\) \$\("#auth-user"\)\.focus\(\);/,                    // login: desktop only
     /^inp\.focus\(\); inp\.setSelectionRange/,                                     // name box, inside if (C.focusName)
+    /^inp\.onkeydown = \(e\) => \{ if \(e\.key === "Enter"\) \{ e\.preventDefault\(\); if \(by\) by\.focus\(\);/, // Enter in title -> author: keyboard already up
     /^\$\("#c-save"\)\.focus\(\);/,                                                // a button, no keyboard
     /^if \(a && d\.contains\(a\) && a\.matches\(TYPING\)\) \{ a\.blur\(\); d\.focus\(\); \}/, // focus the dialog itself
   ];

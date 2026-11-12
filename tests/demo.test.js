@@ -61,6 +61,14 @@ test("POST api/items is idempotent on client_id, like the server", () => {
   assert.equal(d.state().items.length, n + 1);
 });
 
+test("book author: saved, edited and cleared, like the server", () => {
+  const d = createDemo(memStorage());
+  const find = () => d.state().items.find((i) => i.client_id === "a");
+  d.handle("POST", "api/items", { client_id: "a", title: "Dune", type: "book", creator: " Frank  Herbert " });
+  assert.equal(find().creator, "Frank Herbert");
+  d.handle("PATCH", `api/items/${find().id}`, { creator: "" });
+  assert.equal(find().creator, null);
+});
 test("changes persist in the browser's storage only, and reset restores the sample data", () => {
   const st = memStorage();
   const d = createDemo(st);

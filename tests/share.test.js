@@ -5,6 +5,9 @@ const { shareText } = require("../static/share.js");
 test("a book: title and kind", () => {
   assert.equal(shareText({ title: "Project Hail Mary", type: "book" }).text, "You should try this:\n📕 Project Hail Mary (book)");
 });
+test("a book with its author", () => {
+  assert.equal(shareText({ title: "Dune", type: "book", creator: "Frank Herbert" }).text, "You should try this:\n📕 Dune by Frank Herbert (book)");
+});
 test("a pinned place: address without repeating the name, plus a map link anyone can open", () => {
   const t = shareText({ title: "Test Cafe", type: "restaurant", lat: 43.6, lon: -79.4, place_label: "Test Cafe, 1 Main Street, Toronto, Canada" }).text;
   assert.equal(t.split("\n")[1], "🍽️ Test Cafe");

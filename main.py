@@ -62,6 +62,10 @@ def init_db():
             tried_at REAL, told_at REAL, lat REAL, lon REAL, place_label TEXT,
             created REAL NOT NULL, updated REAL NOT NULL, UNIQUE (user_id, client_id));
         """)
+        # columns added after launch (old databases lack them)
+        cols = {r["name"] for r in c.execute("PRAGMA table_info(items)")}
+        if "creator" not in cols:  # who made it: a book's author (label per type lives in app.js)
+            c.execute("ALTER TABLE items ADD COLUMN creator TEXT")
 
 
 init_db()
@@ -162,7 +166,7 @@ def logout(request: Request, resp: Response):
 
 # ---------- data ----------
 
-ITEM_COLS = "id, client_id, title, type, person_id, notes, tried_at, told_at, lat, lon, place_label, created, updated"
+ITEM_COLS = "id, client_id, title, creator, type, person_id, notes, tried_at, told_at, lat, lon, place_label, created, updated"
 
 
 def get_state(c, uid: int) -> dict:
@@ -194,9 +198,14 @@ def person_for(c, uid: int, person_id: int | None, person_name: str | None) -> i
     return person_id
 
 
+def clean_creator(s: str | None) -> str | None:
+    return re.sub(r"\s+", " ", s).strip() or None if s else None
+
+
 class NewItem(BaseModel):
     client_id: str = Field(min_length=1, max_length=64)
     title: str = Field(min_length=1, max_length=300)
+    creator: str | None = Field(None, max_length=200)
     type: str = "other"
     person_id: int | None = None
     person_name: str | None = None
@@ -214,15 +223,16 @@ def add_item(body: NewItem, uid: int = Depends(current_user)):
     now = time.time()
     with db() as c:
         pid = person_for(c, uid, body.person_id, body.person_name)
-        c.execute("INSERT INTO items (user_id,client_id,title,type,person_id,notes,lat,lon,place_label,created,updated) "
-                  "VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (user_id, client_id) DO NOTHING",
-                  (uid, body.client_id, body.title.strip(), body.type, pid, body.notes,
+        c.execute("INSERT INTO items (user_id,client_id,title,creator,type,person_id,notes,lat,lon,place_label,created,updated) "
+                  "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (user_id, client_id) DO NOTHING",
+                  (uid, body.client_id, body.title.strip(), clean_creator(body.creator), body.type, pid, body.notes,
                    body.lat, body.lon, body.place_label, now, now))
         return get_state(c, uid)
 
 
 class ItemPatch(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=300)
+    creator: str | None = Field(None, max_length=200)  # "" clears it
     type: str | None = None
     person_id: int | None = None
     person_name: str | None = None
@@ -248,6 +258,8 @@ def edit_item(item_id: int, body: ItemPatch, uid: int = Depends(current_user)):
         for f in ("title", "type", "notes", "lat", "lon", "place_label"):
             if getattr(body, f) is not None:
                 sets[f] = getattr(body, f)
+        if body.creator is not None:
+            sets["creator"] = clean_creator(body.creator)
         if body.person_id is not None or body.person_name:
             sets["person_id"] = person_for(c, uid, body.person_id, body.person_name)
         if body.clear_person:

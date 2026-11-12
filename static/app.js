@@ -8,6 +8,8 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const ICON = { book: "📕", movie: "🎬", show: "📺", restaurant: "🍽️", place: "📍", podcast: "🎧", music: "🎵", game: "🎮", other: "✳️" };
 const LABEL = { book: "Book", movie: "Movie", show: "Show", restaurant: "Restaurant", place: "Place", podcast: "Podcast", music: "Music", game: "Game", other: "Other" };
 const TYPES = Object.keys(ICON);
+// types with a "who made it" line (stored as creator); the label names it
+const BY = { book: "Author" };
 const PINNABLE = new Set(["place", "restaurant"]);
 
 // Demo mode (#demo): every api call is answered by demo.js inside the browser, never the server.
@@ -145,7 +147,7 @@ function renderComposer() {
   // finished steps stay visible as big rows you can tap to change
   const done = [
     C.type && `${ICON[C.type]} ${LABEL[C.type]}`,
-    C.step > 1 && C.title && `${C.pin ? "📍 " : ""}${C.title}`,
+    C.step > 1 && C.title && `${C.pin ? "📍 " : ""}${C.title}${BY[C.type] && C.by?.trim() ? ", " + C.by.trim() : ""}`,
   ];
   $("#c-steps").innerHTML = STEP_NAMES.map((n, i) => `<li class="${i < C.step ? "done" : i === C.step ? "now" : ""}">
     ${i < C.step && done[i] ? `<button type="button" data-step="${i}"><small>${n}</small><b>${esc(done[i])}</b><span class="edit">Change</span></button>` : `<span><small>${i + 1}</small>${n}</span>`}</li>`).join("");
@@ -166,17 +168,23 @@ let searchT = null, searchN = 0;
 function stepName() {
   const place = isPlace();
   cBody.innerHTML = `<h3 class="c-q">${place ? `Which ${C.type === "restaurant" ? "restaurant" : "place"}?` : `What's the ${LABEL[C.type].toLowerCase()} called?`}</h3>
-    <input id="c-name" class="c-input" value="${esc(C.text)}" enterkeyhint="next" autocapitalize="sentences" autocorrect="off" spellcheck="false" autocomplete="off"
+    <input id="c-what" class="c-input" value="${esc(C.text)}" enterkeyhint="next" autocapitalize="sentences" autocorrect="off" spellcheck="false" autocomplete="off"
       placeholder="${place ? "Name or address" : "Title"}" aria-label="${place ? "Search for the place" : "Title"}">
+    ${BY[C.type] ? `<input id="c-by" class="c-input small c-by" value="${esc(C.by || "")}" enterkeyhint="next" autocapitalize="words" autocorrect="off" spellcheck="false" autocomplete="off"
+      placeholder="${BY[C.type]} (optional)" aria-label="${BY[C.type]}">` : ""}
     <p id="c-hint" class="c-hint"></p>
     ${place ? `<div id="c-map" class="c-map" hidden aria-hidden="true"></div><ul id="c-results" class="c-results" aria-live="polite"></ul>` : ""}`;
-  const inp = $("#c-name");
+  const inp = $("#c-what"), by = $("#c-by");
   if (C.focusName) {  // only straight after a type tile tap: that tap lets iOS open the keyboard
     C.focusName = false;
     inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
   }
   inp.oninput = () => { C.text = inp.value; C.pin = null; nameChanged(); };
-  inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); if (C.title) { C.pin = place ? C.pin : null; goStep(2); } } };
+  inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); if (by) by.focus(); else if (C.title) { C.pin = place ? C.pin : null; goStep(2); } } };
+  if (by) {
+    by.oninput = () => { C.by = by.value; };
+    by.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); if (C.title) goStep(2); } };
+  }
   cBody.onclick = (e) => {
     const b = e.target.closest("[data-r]");
     if (!b) return;
@@ -303,6 +311,7 @@ function stepWho() {
 function saveComposer() {
   if (!C?.title || !C.type) return;
   const it = { client_id: crypto.randomUUID(), title: C.title, type: C.type, notes: "" };
+  if (BY[C.type] && C.by?.trim()) it.creator = C.by.trim();
   if (C.person?.isNew) it.person_name = C.person.name; else if (C.person) it.person_id = C.person.id;
   if (C.pin) Object.assign(it, { lat: C.pin.lat, lon: C.pin.lon, place_label: C.pin.label });
   const who = C.person?.name, type = C.type;
@@ -347,7 +356,7 @@ function row(it, extra = "") {
   const who = personName(it);
   return `<li><button data-item="${it.id ?? ""}" ${it.pending ? "disabled" : ""}>
     <span class="ico" aria-hidden="true">${ICON[it.type] || ICON.other}</span>
-    <span class="t"><b>${esc(it.title)}</b><small>${who ? `${avatar(who)}<span>${esc(who)},</span>` : ""}<span>${it.pending ? "syncing…" : ago(it.created)}</span>${extra ? `<span>${extra}</span>` : ""}</small></span>
+    <span class="t"><b>${esc(it.title)}${it.creator ? `<span class="by">${esc(it.creator)}</span>` : ""}</b><small>${who ? `${avatar(who)}<span>${esc(who)},</span>` : ""}<span>${it.pending ? "syncing…" : ago(it.created)}</span>${extra ? `<span>${extra}</span>` : ""}</small></span>
   </button></li>`;
 }
 
@@ -484,6 +493,7 @@ function openItem(id) {
   openSheet(`
     <div class="title-row"><input id="it-title" class="sheet-title" value="${esc(it.title)}" aria-label="Title">
       <button class="btn share" data-act="share" aria-label="Share with a friend"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Share</button></div>
+    ${BY[it.type] || it.creator ? `<input id="it-by" class="sheet-by" value="${esc(it.creator || "")}" placeholder="${BY[it.type] || "Made by"}" aria-label="${BY[it.type] || "Made by"}" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false">` : ""}
     <div class="row types">${TYPES.map((t) => `<button class="chip ${t === it.type ? "on" : ""}" data-settype="${t}">${ICON[t]} ${LABEL[t]}</button>`).join("")}</div>
     <div class="from">${who ? avatar(who, "lg") : `<span class="av lg new">?</span>`}<span>From</span>
       <select id="it-person" class="btn"><option value="">Nobody</option>${[...people()].sort((a, b) => a.name.localeCompare(b.name))
@@ -513,6 +523,7 @@ function openItem(id) {
   const patch = (b) => mutate("PATCH", `api/items/${id}`, b).then(() => openItem(id)).catch(() => {});
   $("#it-title").onchange = (e) => e.target.value.trim() && patch({ title: e.target.value.trim() });
   $("#it-notes").onchange = (e) => patch({ notes: e.target.value });
+  if ($("#it-by")) $("#it-by").onchange = (e) => patch({ creator: e.target.value.trim() });
   $("#it-person").onchange = (e) => patch(e.target.value ? { person_id: +e.target.value } : { clear_person: true });
   if (pin) showMiniMap(it.lat, it.lon);
 

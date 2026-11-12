@@ -49,8 +49,8 @@ async function walk(page, where) {
   await check("tapping Add");
   // the one allowed case: a type tile tap focuses the name box
   await page.locator('[data-type="book"]').tap(); await page.waitForTimeout(150);
-  assert.equal(await typingFocus(page), "input#c-name", `${where}: name box should focus after a type tile tap`);
-  await page.locator("#c-name").fill("Focus Test Book");
+  assert.equal(await typingFocus(page), "input#c-what", `${where}: name box should focus after a type tile tap`);
+  await page.locator("#c-what").fill("Focus Test Book");
   await page.locator("#c-next").tap(); await page.waitForTimeout(150);
   await check("going to the who step");
   await page.locator("#c-back").tap(); await page.waitForTimeout(150);

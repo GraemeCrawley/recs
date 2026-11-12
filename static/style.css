@@ -148,6 +148,10 @@ select.btn { width: auto; flex: 1; border: 0; appearance: auto; }
 .t b { font-weight: 650; display: block; overflow-wrap: anywhere; }
 .t small, .count { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; color: var(--muted); font-size: 14px; margin-top: 1px; }
 .t small .av { font-size: 13px; }
+.t b .by { font-weight: 450; color: var(--muted); }
+.t b .by::before { content: " · "; }
+.c-by { margin-top: 10px; }
+.sheet-by { font-size: 16px; border-color: transparent; background: var(--bg); color: var(--muted); }
 .tell-tag { color: var(--accent); font-weight: 700; }
 .done-tag { color: var(--ok); font-weight: 600; }
 .chev { color: var(--muted); font-size: 20px; flex: none; }

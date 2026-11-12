@@ -12,7 +12,7 @@
       .map((name, i) => ({ id: i + 1, name, last_used: now - i * DAY }));
     let id = 0;
     const item = (title, type, person_id, daysAgo, extra = {}) => ({
-      id: ++id, client_id: "demo-" + id, title, type, person_id, notes: "", tried_at: null, told_at: null,
+      id: ++id, client_id: "demo-" + id, title, creator: null, type, person_id, notes: "", tried_at: null, told_at: null,
       lat: null, lon: null, place_label: null, created: now - daysAgo * DAY, updated: now - daysAgo * DAY, ...extra });
     const items = [
       item("Little Blue Cafe", "restaurant", 4, 1, { lat: 43.6652, lon: -79.3851, place_label: "Little Blue Cafe, Toronto" }),
@@ -20,7 +20,7 @@
       item("High Park", "place", 1, 3, { lat: 43.6465, lon: -79.4637, place_label: "High Park, Toronto" }),
       item("Corner Noodle Bar", "restaurant", 3, 4, { lat: 43.6545, lon: -79.4012, place_label: "Corner Noodle Bar, Toronto" }),
       item("The Bear", "show", 2, 6),
-      item("Project Hail Mary", "book", 1, 9, { notes: "Said the audiobook is even better" }),
+      item("Project Hail Mary", "book", 1, 9, { creator: "Andy Weir", notes: "Said the audiobook is even better" }),
       item("Paddington 2", "movie", 4, 12, { tried_at: now - 2 * DAY, notes: "Lovely. Kim was right." }),
       item("Hades", "game", 3, 20, { tried_at: now - 8 * DAY, told_at: now - 7 * DAY }),
       item("Green Fig Bakery", "restaurant", 5, 25, { lat: 43.6481, lon: -79.3958, place_label: "Green Fig Bakery, Toronto",
@@ -89,7 +89,7 @@
         case "POST api/items": {
           if (!db.items.some((i) => i.client_id === body.client_id)) {
             db.items.push({ id: db.nextItem++, client_id: body.client_id, title: String(body.title).trim(),
-              type: body.type || "other", person_id: personFor(body.person_id, body.person_name), notes: body.notes || "",
+              creator: body.creator ? clean(body.creator) || null : null, type: body.type || "other", person_id: personFor(body.person_id, body.person_name), notes: body.notes || "",
               tried_at: null, told_at: null, lat: body.lat ?? null, lon: body.lon ?? null,
               place_label: body.place_label ?? null, created: now, updated: now });
           }
@@ -98,6 +98,7 @@
         case "PATCH api/items/:id": {
           const it = findItem(id);
           for (const f of ["title", "type", "notes", "lat", "lon", "place_label"]) if (body[f] != null) it[f] = body[f];
+          if (body.creator != null) it.creator = clean(body.creator) || null;
           if (body.person_id != null || body.person_name) it.person_id = personFor(body.person_id, body.person_name);
           if (body.clear_person) it.person_id = null;
           if (body.clear_pin) Object.assign(it, { lat: null, lon: null, place_label: null });
