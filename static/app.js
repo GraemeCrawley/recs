@@ -289,9 +289,16 @@ function stepWho() {
       + (sel?.isNew && sel.name !== f.trim() ? `<li><button type="button" data-p="keepnew" class="on">${avatar(sel.name, "lg new")}<span><b>${esc(sel.name)}</b><small>New person</small></span></button></li>` : "")
       + shown.map((p) => `<li><button type="button" data-p="${p.id}" class="${isSel(p) ? "on" : ""}" aria-pressed="${isSel(p)}">${avatar(p.name, "lg")}<span><b>${esc(p.name)}</b></span></button></li>`).join("");
     const who = sel === undefined ? "" : sel === null ? " (nobody)" : ` from ${firstName(sel.name)}`;
-    cFoot.innerHTML = `<button type="button" class="btn primary big" id="c-save" ${sel === undefined ? "disabled" : ""}>Save${esc(who)}</button>`;
-    $("#c-save").onclick = saveComposer;
+    const save = $("#c-save");
+    save.disabled = sel === undefined;
+    save.textContent = "Save" + who;
   };
+  // a note for every suggestion, whatever the type (why they liked it, what to order…). Never auto-focused.
+  cFoot.innerHTML = `<textarea id="c-note" class="c-note" rows="2" placeholder="Add a note (optional)" aria-label="Note"
+      autocomplete="off" autocapitalize="sentences">${esc(C.note || "")}</textarea>
+    <button type="button" class="btn primary big" id="c-save">Save</button>`;
+  $("#c-note").oninput = (e) => { C.note = e.target.value; };
+  $("#c-save").onclick = saveComposer;
   cBody.innerHTML = `<h3 class="c-q">Who suggested it?</h3>
     <input id="c-find" class="c-input small" type="search" value="${esc(C.query2 || "")}" placeholder="Search or add a name" aria-label="Search people" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false">
     <ul id="c-people" class="c-people"></ul>`;
@@ -310,7 +317,7 @@ function stepWho() {
 
 function saveComposer() {
   if (!C?.title || !C.type) return;
-  const it = { client_id: crypto.randomUUID(), title: C.title, type: C.type, notes: "" };
+  const it = { client_id: crypto.randomUUID(), title: C.title, type: C.type, notes: (C.note || "").trim() };
   if (BY[C.type] && C.by?.trim()) it.creator = C.by.trim();
   if (C.person?.isNew) it.person_name = C.person.name; else if (C.person) it.person_id = C.person.id;
   if (C.pin) Object.assign(it, { lat: C.pin.lat, lon: C.pin.lon, place_label: C.pin.label });

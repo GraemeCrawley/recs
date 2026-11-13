@@ -116,6 +116,8 @@ select.btn { width: auto; flex: 1; border: 0; appearance: auto; }
 .c-people button.on::after { content: "✓"; color: var(--accent); font-size: 20px; font-weight: 800; }
 .c-foot { padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--bg); }
 .c-foot:empty { display: none; }
+.c-note { display: block; width: 100%; margin-bottom: 10px; font: inherit; font-size: 16px; padding: 10px 12px;
+  border: 1.5px solid var(--line); border-radius: 12px; background: var(--card); color: inherit; resize: none; }
 .btn.big { width: 100%; min-height: 56px; font-size: 18px; border-radius: 16px; }
 .btn:disabled { opacity: .45; cursor: default; }
 
