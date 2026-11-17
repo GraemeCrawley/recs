@@ -9,7 +9,7 @@ const ICON = { book: "📕", movie: "🎬", show: "📺", restaurant: "🍽️",
 const LABEL = { book: "Book", movie: "Movie", show: "Show", restaurant: "Restaurant", place: "Place", podcast: "Podcast", music: "Music", game: "Game", other: "Other" };
 const TYPES = Object.keys(ICON);
 // types with a "who made it" line (stored as creator); the label names it
-const BY = { book: "Author" };
+const BY = { book: "Author", music: "Artist" };
 const PINNABLE = new Set(["place", "restaurant"]);
 
 // Demo mode (#demo): every api call is answered by demo.js inside the browser, never the server.
